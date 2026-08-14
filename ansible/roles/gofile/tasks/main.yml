@@ -1,79 +1,107 @@
 ---
 # tasks file for gofile role
 
-- name: Check if supervisor is installed
-  ansible.builtin.command: which supervisorctl
-  register: supervisor_check
-  changed_when: false
-  failed_when: false
-  tags: [supervisor]
+- block:
+  - name: Check current user
+    ansible.builtin.shell: echo $(whoami)
+    register: _cur_user
+    changed_when: false
 
-- name: Install supervisor if not present
-  ansible.builtin.apt:
-    name: supervisor
-    state: present
-  when: supervisor_check.rc != 0
-  tags: [supervisor]
+  - name: Create dedicated user
+    ansible.builtin.user:
+      name: "{{ gofile_user }}"
+      shell: /usr/sbin/nologin
+    become: true
+    when: not gofile_using_cur_user
 
-- name: Create installation directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-    recurse: yes
-  loop:
-    - "{{ gofile_dir }}"
-    - "{{ gofile_dir }}/logs"
-    - "{{ gofile_dir }}/files"
-  tags: [dir]
+  - name: Debug using user
+    ansible.builtin.debug:
+      msg: "using user {{ _user }}"
 
-- name: Download and extract gofile binary from GitHub
-  block:
-    - name: Download gofile archive
-      ansible.builtin.get_url:
-        url: "{{ gofile_binary_url }}"
-        dest: /tmp/gofile-linux.tar.gz
-        mode: '0644'
-        force: yes
+  - name: Create base directories
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      owner: "{{ _user }}"
+      group: "{{ _user }}"
+    loop:
+      - "{{ gofile_dir }}"
+      - "{{ gofile_dir }}/logs"
+    become: true
+    tags: [dir]
 
-    - name: Extract gofile binary
-      ansible.builtin.unarchive:
-        src: /tmp/gofile-linux.tar.gz
-        dest: "{{ gofile_dir }}"
-        remote_src: yes
-        creates: "{{ gofile_dir }}/gofile-linux"
+  - name: Create instance directories
+    ansible.builtin.file:
+      path: "{{ item.dir }}"
+      state: directory
+      owner: "{{ _user }}"
+      group: "{{ _user }}"
+    loop: "{{ gofile_list }}"
+    become: true
+    tags: [dir]
 
-    - name: Set executable permission
-      ansible.builtin.file:
-        path: "{{ gofile_dir }}/gofile-linux"
-        mode: '0755'
+  - name: Download and extract gofile binary
+    block:
+      - name: Download gofile archive
+        ansible.builtin.get_url:
+          url: "{{ gofile_binary_url }}"
+          dest: /tmp/gofile-linux.tar.gz
+          mode: '0644'
+          force: yes
 
-    - name: Clean up archive
-      ansible.builtin.file:
-        path: /tmp/gofile-linux.tar.gz
-        state: absent
-  tags: [sync, update]
+      - name: Extract gofile binary
+        ansible.builtin.unarchive:
+          src: /tmp/gofile-linux.tar.gz
+          dest: "{{ gofile_dir }}"
+          remote_src: yes
+          creates: "{{ gofile_dir }}/gofile-linux"
 
-- name: Deploy supervisor configuration
-  block:
-    - name: Create supervisor config
-      ansible.builtin.template:
-        src: "supervisor/gofile.conf.j2"
-        dest: "/etc/supervisor/conf.d/gofile.conf"
-        owner: root
-        group: root
-        mode: '0644'
-        backup: yes
+      - name: Set executable permission
+        ansible.builtin.file:
+          path: "{{ gofile_dir }}/gofile-linux"
+          state: file
+          mode: '0755'
+          owner: "{{ _user }}"
+          group: "{{ _user }}"
 
-    - name: Ensure supervisor is enabled
-      ansible.builtin.service:
-        name: supervisor
-        enabled: yes
-        state: started
+      - name: Clean up archive
+        ansible.builtin.file:
+          path: /tmp/gofile-linux.tar.gz
+          state: absent
+    tags: [sync, update]
 
-    - name: Reload and restart gofile
-      ansible.builtin.shell: >
-        supervisorctl reread &&
-        supervisorctl update &&
-        supervisorctl restart gofile
-  tags: [conf, start, update]
+  - name: Ensure supervisor is running
+    ansible.builtin.service:
+      name: supervisor
+      enabled: yes
+      state: started
+
+  - name: Reread and update supervisor
+    ansible.builtin.shell: supervisorctl reread && supervisorctl update
+    become: true
+
+  - name: Deploy supervisor configuration
+    ansible.builtin.template:
+      src: "supervisor/gofile.conf.j2"
+      dest: "/etc/supervisor/conf.d/gofile.conf"
+      owner: "{{ _user }}"
+      group: "{{ _user }}"
+      mode: '0644'
+      backup: no
+    notify:
+      - reread and update
+      - restart all instances
+    vars:
+      _gofile_user: "{{ _user }}"
+    become: true
+    tags: [conf, start, update]
+
+  - name: Restart all instances
+    ansible.builtin.shell: >
+      supervisorctl restart gofile-{{ item.port }}
+    loop: "{{ gofile_list }}"
+    become: true
+    tags: [start, update]
+
+  vars:
+    _user: "{{ _cur_user.stdout if gofile_using_cur_user else gofile_user }}"

@@ -1,8 +1,12 @@
+---
 # handlers file for gofile role
 
-- name: restart gofile
+- name: reread and update
+  ansible.builtin.shell: supervisorctl reread && supervisorctl update
+  become: true
+
+- name: restart all instances
   ansible.builtin.shell: >
-    supervisorctl reread &&
-    supervisorctl update &&
-    supervisorctl restart gofile
-  listen: "restart gofile"
+    supervisorctl restart gofile-{{ item.port }}
+  loop: "{{ gofile_list }}"
+  become: true

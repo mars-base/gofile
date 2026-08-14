@@ -1,5 +1,9 @@
 # defaults file for gofile role
 
+# Whether to use the current ansible user (true) or create a dedicated user (false)
+gofile_using_cur_user: true
+gofile_user: gofile
+
 # Installation directory
 gofile_dir: /srv/gofile
 
@@ -9,50 +13,18 @@ gofile_version: latest
 # Binary download URL
 gofile_binary_url: "https://github.com/mars-base/gofile/releases/{{ gofile_version }}/download/gofile-linux.tar.gz"
 
-# --- Command parameters ---
-# Adjust parameters as needed:
-#   -h: listen IP
-#   -p: server port
-#   -d: static file directory
-#   -gzip: enable gzip compression
-#   -upload: enable file upload
-#   -uploadSize: upload size limit (MB)
-#   -cache: enable file caching
-#   -cacheSize: cache file size limit (MB)
-#   -cacheTime: cache expiration time (minutes)
-#   -auth: enable basic authentication
-#   -authString: auth credentials (format: user1:pass1,user2:pass2)
-#   -cert: TLS certificate file path (empty = disabled)
-#   -key: TLS private key file path (empty = disabled)
-gofile_listen_ip: "0.0.0.0"
-gofile_port: 8080
-gofile_serve_dir: "{{ gofile_dir }}/files"
-gofile_gzip: false
-gofile_upload: false
-gofile_upload_size: 10
-gofile_cache: false
-gofile_cache_size: 1
-gofile_cache_time: 10
-gofile_auth: false
-gofile_auth_string: "admin:admin"
-gofile_cert: ""
-gofile_key: ""
-
-# Full command (auto-built from parameters above)
-gofile_cmd: >-
-  {{ gofile_dir }}/gofile-linux
-  -h {{ gofile_listen_ip }}
-  -p {{ gofile_port }}
-  -d {{ gofile_serve_dir }}
-  {% if gofile_gzip %}-gzip{% endif %}
-  {% if gofile_upload %}-upload -uploadSize {{ gofile_upload_size }}{% endif %}
-  {% if gofile_cache %}-cache -cacheSize {{ gofile_cache_size }} -cacheTime {{ gofile_cache_time }}{% endif %}
-  {% if gofile_auth %}-auth -authString "{{ gofile_auth_string }}"{% endif %}
-  {% if gofile_cert %}-cert {{ gofile_cert }} -key {{ gofile_key }}{% endif %}
-
-# Supervisor settings
-gofile_supervisor_autorestart: true
-gofile_supervisor_autostart: true
-gofile_supervisor_user: root
-gofile_supervisor_startsecs: 3
-gofile_supervisor_startretries: 3
+# --- Instance list ---
+# Each entry deploys a separate gofile instance with its own port, directory and extra args.
+# extra_args supports all gofile flags, e.g.:
+#   -gzip
+#   -upload -uploadSize 50
+#   -cache -cacheSize 2 -cacheTime 15
+#   -auth -authString "admin:pass123"
+#   -cert /path/cert.pem -key /path/key.pem
+gofile_list:
+  - port: 8080
+    dir: /srv/gofile/8080
+    extra_args: ""
+  - port: 8081
+    dir: /srv/gofile/8081
+    extra_args: ""

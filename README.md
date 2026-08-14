@@ -38,37 +38,37 @@ make linux    # or make windows, make darwin-amd64, make darwin-arm64
 ### Deploy with Ansible
 ```bash
 # Install roles and playbooks into your project
-bash ansible/install.sh
+curl -sL https://raw.githubusercontent.com/mars-base/gofile/main/ansible/install.sh | bash
 
-# Deploy to servers (default config)
+# Deploy to servers (default: 2 instances on port 8080/8081)
 ansible-playbook -i hosts.ini playbooks/gofile.yml -e "HOSTS=servers"
 
-# Deploy with custom configuration
-ansible-playbook -i hosts.ini playbooks/gofile.yml \
-  -e "HOSTS=servers" \
-  -e "gofile_port=9000" \
-  -e "gofile_upload=true" \
-  -e "gofile_upload_size=50" \
-  -e "gofile_auth=true" \
-  -e "gofile_auth_string=admin:secret123" \
-  -e "gofile_gzip=true"
+# Deploy with custom instances (multiple file servers on one machine)
+ansible-playbook -i hosts.ini playbooks/gofile.yml -e "HOSTS=servers" -e @extra_vars.yml
+```
+
+**extra_vars.yml example (multi-instance):**
+```yaml
+gofile_list:
+  - port: 8080
+    dir: /data/public
+    extra_args: "-gzip -cache"
+  - port: 9000
+    dir: /data/uploads
+    extra_args: "-upload -uploadSize 100 -auth -authString admin:secret123"
+  - port: 9001
+    dir: /data/docs
+    extra_args: ""
 ```
 
 **Ansible variables:**
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `gofile_dir` | `/srv/gofile` | Installation directory |
+| `gofile_dir` | `/srv/gofile` | Base installation directory |
 | `gofile_version` | `latest` | Release version (e.g., `v1.0.0`) |
-| `gofile_port` | `8080` | Server port |
-| `gofile_serve_dir` | `/srv/gofile/files` | Static file directory |
-| `gofile_gzip` | `false` | Enable gzip compression |
-| `gofile_upload` | `false` | Enable file upload |
-| `gofile_upload_size` | `10` | Upload size limit (MB) |
-| `gofile_cache` | `false` | Enable file caching |
-| `gofile_auth` | `false` | Enable basic authentication |
-| `gofile_auth_string` | `admin:admin` | Auth credentials |
-| `gofile_cert` | - | TLS certificate file path |
-| `gofile_key` | - | TLS private key file path |
+| `gofile_using_cur_user` | `true` | Use current ansible user |
+| `gofile_user` | `gofile` | Dedicated user (when `gofile_using_cur_user: false`) |
+| `gofile_list` | 2 instances | List of instances (port, dir, extra_args) |
 
 ## Usage
 

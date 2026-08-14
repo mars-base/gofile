@@ -1,16 +1,19 @@
-[program:gofile]
-autorestart = {{ gofile_supervisor_autorestart | lower }}
-autostart = {{ gofile_supervisor_autostart | lower }}
-command = {{ gofile_cmd }}
-directory = {{ gofile_dir }}
+{% for item in gofile_list %}
+[program:gofile-{{ item.port }}]
+autorestart = true
+autostart = true
+command = {{ gofile_dir }}/gofile-linux -d {{ item.dir }} -p {{ item.port }} {{ item.extra_args }}
+directory = {{ item.dir }}
+stopsignal = TERM
 redirect_stderr = false
-stderr_logfile = {{ gofile_dir }}/logs/err_gofile.log
-stderr_logfile_maxbytes = 100MB
+stderr_logfile = {{ gofile_dir }}/logs/{{ item.port }}-stderr.log
+stderr_logfile_maxbytes = 20MB
 stderr_logfile_backups = 5
-stdout_logfile = {{ gofile_dir }}/logs/out_gofile.log
-stdout_logfile_maxbytes = 100MB
+stdout_logfile = {{ gofile_dir }}/logs/{{ item.port }}-stdout.log
+stdout_logfile_maxbytes = 20MB
 stdout_logfile_backups = 5
-user = {{ gofile_supervisor_user }}
-startsecs = {{ gofile_supervisor_startsecs }}
-startretries = {{ gofile_supervisor_startretries }}
-environment = HOME="{{ gofile_dir }}"
+user = {{ _gofile_user }}
+startsecs = 5
+startretries = 3
+
+{% endfor %}
