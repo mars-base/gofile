@@ -1,6 +1,15 @@
 package main
 
-var gName = "gofile - Simple and flexiable file server" // 程序名称
+import _ "embed"
+
+//go:embed home.html
+var gIndexPage string
+
+//go:embed favicon.png
+var gFavBytes []byte
+
+var gName = "gofile - Simple and flexible file server"
+var gVersion = "v1.0.0"
 var gUsage = `
 Support:
 	1. List files with set directory
@@ -24,4 +33,3 @@ Example:
 	curl -F "file=@t.yaml" "http://127.0.0.1:8080/upload?dir=/"
 	curl -F "file=@t.yaml" "http://127.0.0.1:8080/upload?dir=/" -u "<username>:<password>"
 `
-var gVersion = "v1.0.0" // 版本号

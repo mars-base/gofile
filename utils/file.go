@@ -20,12 +20,15 @@ func SaveToFile(filePath string, content string) bool {
 
 func DirExist(path string) bool {
 	info, err := os.Stat(path)
-	return !os.IsNotExist(err) && info.IsDir()
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 func FileExist(filePath string) bool {
 	info, err := os.Stat(filePath)
-	if os.IsNotExist(err) {
+	if err != nil {
 		return false
 	}
 	return !info.IsDir()

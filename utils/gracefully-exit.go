@@ -19,6 +19,7 @@ func AddGracefulExit(fn GracefulExitCallback) { // 编译build后运行 信号�
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM) // 15
 	signal.Notify(sig, syscall.SIGINT)  // 2 ctrl+c
+	signal.Notify(sig, syscall.SIGHUP)  // 1 终端断开
 
 	// Block until a signal is received.
 	<-sig
