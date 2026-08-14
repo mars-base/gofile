@@ -9,7 +9,7 @@ var gIndexPage string
 var gFavBytes []byte
 
 var gName = "gofile - Simple and flexible file server"
-var gVersion = "v1.0.0"
+var gVersion = "dev" // 通过 -ldflags "-X main.gVersion=vX.X.X" 注入 git tag 版本
 var gUsage = `
 Support:
 	1. List files with set directory
