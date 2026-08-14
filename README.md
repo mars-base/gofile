@@ -28,15 +28,6 @@ curl -fsSL https://raw.githubusercontent.com/mars-base/gofile/main/scripts/insta
 irm https://raw.githubusercontent.com/mars-base/gofile/main/scripts/install.ps1 | iex
 ```
 
-### Install specific version
-```bash
-# Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/mars-base/gofile/main/scripts/install.sh | bash -s -- --version v1.0.0
-
-# Windows
-.\scripts\install.ps1 -Version "v1.0.0"
-```
-
 ### Build from source
 ```bash
 git clone https://github.com/mars-base/gofile.git
