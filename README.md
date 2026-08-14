@@ -16,6 +16,28 @@ Simple and flexible file server with directory listing, upload, and basic auth.
 
 ## Installation
 
+### Quick Install
+
+**Linux / macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/mars-base/gofile/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/mars-base/gofile/main/scripts/install.ps1 | iex
+```
+
+### Install specific version
+```bash
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/mars-base/gofile/main/scripts/install.sh | bash -s -- --version v1.0.0
+
+# Windows
+.\scripts\install.ps1 -Version "v1.0.0"
+```
+
+### Build from source
 ```bash
 git clone https://github.com/mars-base/gofile.git
 cd gofile
@@ -78,16 +100,6 @@ curl -F "file=@/path/to/file" "http://localhost:8080/upload?dir=/"
 
 # With auth
 curl -F "file=@/path/to/file" "http://localhost:8080/upload?dir=/" -u "admin:pass123"
-```
-
-## Version
-
-Version is automatically injected from git tag during build:
-
-```bash
-git tag v1.0.0
-make linux
-./build/gofile-linux -v
 ```
 
 ## License

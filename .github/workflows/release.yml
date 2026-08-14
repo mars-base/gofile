@@ -57,30 +57,30 @@ jobs:
 
       - name: Create release archives
         run: |
-          for dir in gofile-*; do
-            if [ -d "$dir" ]; then
-              cd "$dir"
-              for file in *; do
-                if [ -f "$file" ]; then
-                  if [[ "$file" == *.exe ]]; then
-                    zip "${file%.exe}.zip" "$file"
-                  else
-                    tar -czf "${file}.tar.gz" "$file"
-                  fi
-                  rm "$file"
-                fi
-              done
-              cd ..
-            fi
-          done
-          mv */* .
+          mkdir -p release
+
+          # Linux
+          cp gofile-linux/gofile-linux release/
+          cd release && tar -czf gofile-linux.tar.gz gofile-linux && rm gofile-linux && cd ..
+
+          # Windows
+          cp gofile.exe/gofile.exe release/
+          cd release && zip gofile.zip gofile.exe && rm gofile.exe && cd ..
+
+          # macOS amd64
+          cp gofile-darwin-amd64/gofile-darwin-amd64 release/
+          cd release && tar -czf gofile-darwin-amd64.tar.gz gofile-darwin-amd64 && rm gofile-darwin-amd64 && cd ..
+
+          # macOS arm64
+          cp gofile-darwin-arm64/gofile-darwin-arm64 release/
+          cd release && tar -czf gofile-darwin-arm64.tar.gz gofile-darwin-arm64 && rm gofile-darwin-arm64 && cd ..
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            *.tar.gz
-            *.zip
+            release/*.tar.gz
+            release/*.zip
           generate_release_notes: true
           draft: false
           prerelease: false
