@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gofile Server</title>
+	<link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #c7c7c7;
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #555;
+        }
+        th {
+            background-color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #2e2e2e;
+        }
+        tr:nth-child(odd) {
+            background-color: #252525;
+        }
+        a {
+            color: #61dafb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            color: #ffffff;
+        }
+        .breadcrumb {
+            margin-bottom: 10px;
+        }
+		{{if .EnableUpload}}
+        .upload-form {
+            margin-top: 20px;
+        }
+        .upload-form input[type="file"] {
+            display: none;
+        }
+        .upload-form label, .upload-form button {
+            display: inline-block;
+            padding: 10px 20px; /* 调整按钮的内边距，减小高度 */
+            margin: 10px 5px;
+            font-size: 14px; /* 调整字体大小 */
+            color: #1e1e1e;
+            background-color: #61dafb;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .upload-form label:hover, .upload-form button:hover {
+            background-color: #4fc3f7;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .file-name {
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+            max-width: 200px; /* Adjust the width as needed */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .progress-container {
+            display: none;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 0;
+            height: 20px;
+            background-color: #61dafb;
+            text-align: center;
+            color: #1e1e1e;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+		{{end}}
+    </style>
+</head>
+<body>
+    <h1>Directory: {{.DirPath}}</h1>
+    <div class="breadcrumb">
+        {{if .ParentPath}}
+            <a href="{{.ParentPath}}">.. Go to previous directory</a>
+        {{end}}
+    </div>
+    {{if .EnableUpload}}
+    <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
+    <label for="fileInput">Choose File</label>
+    <input type="file" name="file" id="fileInput">
+    <span class="file-name" id="fileName"></span>
+
+    <button type="submit">Upload File</button>
+	</form>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <div class="error-message" id="errorMessage"></div>
+    {{end}}
+    <table>
+        <tr>
+            <th>File Name</th>
+            <th>File Size</th>
+            <th>Modified Time</th>
+        </tr>
+    {{range .Files}}
+        <tr>
+            <td>
+                {{if .IsDir}}
+                    <a href="{{.Path}}/">{{.Name}}/</a>
+                {{else}}
+                    <a href="{{.Path}}" download>{{.Name}}</a>
+                {{end}}
+            </td>
+            <td>{{.Size}}</td>
+            <td>{{.FormattedModTime}}</td>
+        </tr>
+    {{end}}
+    </table>
+	{{if .EnableUpload}}
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const fileInput = event.target;
+            const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+            const fileNameDisplay = document.getElementById('fileName');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '';
+
+            if (file) {
+                if (!(file instanceof File) || file.size === 0) {
+                    errorMessage.textContent = 'The selected item is not a valid file.';
+                    fileNameDisplay.textContent = '';
+                } else {
+                    fileNameDisplay.textContent = file.name;
+                    fileNameDisplay.title = file.name; // 设置完整名称为 tooltip
+                }
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '';
+
+            if (!file) {
+                errorMessage.textContent = 'Please select a file to upload.';
+                return;
+            }
+
+            if (!(file instanceof File) || file.size === 0) {
+                errorMessage.textContent = 'Please select a valid file, not a directory.';
+                return;
+            }
+
+            const formData = new FormData();
+            try {
+                formData.append('file', file);
+            } catch (e) {
+                errorMessage.textContent = 'Error preparing the file for upload.';
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload?dir={{.DirPath}}', true);
+
+            xhr.upload.addEventListener('progress', function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    const progressBar = document.getElementById('progressBar');
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                    document.getElementById('progressContainer').style.display = 'block';
+                }
+            });
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('File uploaded successfully!');
+                    window.location.reload();
+                } else if (xhr.status === 413) { // HTTP Status 413: Request Entity Too Large
+                    alert('File size exceeds the limit and cannot be uploaded.');
+                    window.location.reload();
+                } else if (xhr.status === 400) { // HTTP Status 400: Bad Request
+                    alert('Bad Request, please check your file and try again.');
+                    window.location.reload();
+                } else if (xhr.status === 500) { // HTTP Status 500: Internal Server Error
+                    alert('Internal Server Error, please try again later.');
+                    window.location.reload();
+                }
+                else {
+                    errorMessage.textContent = 'Failed to upload file.';
+                }
+            };
+
+            xhr.onerror = function() {
+                errorMessage.textContent = 'An error occurred during the upload. Please try again.';
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+	{{end}}
+</body>
+</html>
