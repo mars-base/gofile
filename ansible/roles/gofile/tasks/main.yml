@@ -98,7 +98,10 @@
 
   - name: Restart all instances
     ansible.builtin.shell: >
-      supervisorctl restart gofile-{{ item.port }}
+      supervisorctl reread &&
+      supervisorctl update &&
+      supervisorctl restart gofile-{{ item.port }} ||
+      supervisorctl start gofile-{{ item.port }}
     loop: "{{ gofile_list }}"
     become: true
     tags: [start, update]
