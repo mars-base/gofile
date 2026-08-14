@@ -31,10 +31,21 @@ mkdir -p "$TARGET/roles"
 cp -r "$TMPDIR/gofile/ansible/roles/gofile" "$TARGET/roles/gofile"
 echo "    ✓ roles/gofile"
 
-# Install playbook (at target root so ansible auto-discovers roles/ sibling dir)
+# Install playbook
 echo "==> Installing playbook..."
-cp "$TMPDIR/gofile/ansible/playbooks/gofile.yml" "$TARGET/gofile.yml"
-echo "    ✓ gofile.yml"
+mkdir -p "$TARGET/playbooks"
+cp "$TMPDIR/gofile/ansible/playbooks/gofile.yml" "$TARGET/playbooks/gofile.yml"
+echo "    ✓ playbooks/gofile.yml"
+
+# Create ansible.cfg if not exists (so ansible finds roles/ from playbooks/)
+if [ ! -f "$TARGET/ansible.cfg" ]; then
+    cat > "$TARGET/ansible.cfg" <<'EOF'
+[defaults]
+roles_path = ../roles
+inventory = hosts.ini
+EOF
+    echo "    ✓ ansible.cfg"
+fi
 
 # Create hosts.ini if not exists
 if [ ! -f "$TARGET/hosts.ini" ]; then
@@ -56,8 +67,7 @@ echo ""
 echo "Usage:"
 echo "  # 1. Edit $TARGET/hosts.ini to add your servers"
 echo "  # 2. Deploy (default: 2 instances on port 8080/8081)"
-echo "  ansible-playbook -i $TARGET/hosts.ini $TARGET/gofile.yml -e \"HOSTS=servers\""
+echo "  cd $TARGET && ansible-playbook playbooks/gofile.yml -e \"HOSTS=servers\""
 echo ""
 echo "  # Deploy with custom instances"
-echo "  ansible-playbook -i $TARGET/hosts.ini $TARGET/gofile.yml \\"
-echo "    -e \"HOSTS=servers\" -e @extra_vars.yml"
+echo "  cd $TARGET && ansible-playbook playbooks/gofile.yml -e \"HOSTS=servers\" -e @extra_vars.yml"
