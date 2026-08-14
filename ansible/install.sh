@@ -37,16 +37,6 @@ mkdir -p "$TARGET/playbooks/tools"
 cp "$TMPDIR/gofile/ansible/playbooks/gofile.yml" "$TARGET/playbooks/tools/gofile.yml"
 echo "    ✓ playbooks/tools/gofile.yml"
 
-# Create ansible.cfg if not exists (so ansible finds roles/ from playbooks/)
-if [ ! -f "$TARGET/ansible.cfg" ]; then
-    cat > "$TARGET/ansible.cfg" <<'EOF'
-[defaults]
-roles_path = roles
-inventory = hosts.ini
-EOF
-    echo "    ✓ ansible.cfg"
-fi
-
 # Create hosts.ini if not exists
 if [ ! -f "$TARGET/hosts.ini" ]; then
     cat > "$TARGET/hosts.ini" <<'EOF'
