@@ -41,10 +41,10 @@ make linux    # or make windows, make darwin-amd64, make darwin-arm64
 curl -sL https://raw.githubusercontent.com/mars-base/gofile/main/ansible/install.sh | bash
 
 # Edit hosts.ini to add your servers, then deploy
-cd . && ansible-playbook playbooks/gofile.yml -e "HOSTS=servers"
+cd . && ansible-playbook playbooks/tools/gofile.yml -e "HOSTS=servers"
 
 # Deploy with custom instances
-ansible-playbook playbooks/gofile.yml -e "HOSTS=servers" -e @extra_vars.yml
+ansible-playbook playbooks/tools/gofile.yml -e "HOSTS=servers" -e @extra_vars.yml
 ```
 
 **extra_vars.yml example (multi-instance):**
