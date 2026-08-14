@@ -37,14 +37,14 @@ make linux    # or make windows, make darwin-amd64, make darwin-arm64
 
 ### Deploy with Ansible
 ```bash
-# Install role and playbook
+# Install role and playbook (into current directory)
 curl -sL https://raw.githubusercontent.com/mars-base/gofile/main/ansible/install.sh | bash
 
-# Edit ansible/hosts.ini to add your servers, then deploy (default: 2 instances on port 8080/8081)
-ansible-playbook -i ansible/hosts.ini ansible/gofile.yml -e "HOSTS=servers"
+# Edit hosts.ini to add your servers, then deploy
+ansible-playbook -i hosts.ini gofile.yml -e "HOSTS=servers"
 
 # Deploy with custom instances
-ansible-playbook -i ansible/hosts.ini ansible/gofile.yml -e "HOSTS=servers" -e @extra_vars.yml
+ansible-playbook -i hosts.ini gofile.yml -e "HOSTS=servers" -e @extra_vars.yml
 ```
 
 **extra_vars.yml example (multi-instance):**

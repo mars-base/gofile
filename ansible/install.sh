@@ -16,13 +16,7 @@ echo "==> Cloning gofile ($BRANCH)..."
 git clone --depth 1 --branch "$BRANCH" "$REPO" "$TMPDIR/gofile" 2>/dev/null
 
 # Determine target directory
-if [ -n "$1" ]; then
-    TARGET="$1"
-elif [ -d "./ansible" ]; then
-    TARGET="./ansible"
-else
-    TARGET="./ansible"
-fi
+TARGET="${1:-.}"
 
 mkdir -p "$TARGET"
 echo "==> Target directory: $TARGET"
