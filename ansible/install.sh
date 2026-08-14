@@ -37,27 +37,11 @@ mkdir -p "$TARGET/playbooks/tools"
 cp "$TMPDIR/gofile/ansible/playbooks/gofile.yml" "$TARGET/playbooks/tools/gofile.yml"
 echo "    ✓ playbooks/tools/gofile.yml"
 
-# Create hosts.ini if not exists
-if [ ! -f "$TARGET/hosts.ini" ]; then
-    cat > "$TARGET/hosts.ini" <<'EOF'
-[servers]
-# server1 ansible_host=192.168.1.100
-# server2 ansible_host=192.168.1.101
-
-[all:vars]
-ansible_user=root
-# ansible_ssh_private_key_file=~/.ssh/id_rsa
-EOF
-    echo "    ✓ hosts.ini"
-fi
-
 echo ""
 echo "==> Done!"
 echo ""
 echo "Usage:"
-echo "  # 1. Edit $TARGET/hosts.ini to add your servers"
-echo "  # 2. Deploy (default: 2 instances on port 8080/8081)"
-echo "  cd $TARGET && ansible-playbook playbooks/tools/gofile.yml -e \"HOSTS=servers\""
+echo "  ansible-playbook -i hosts.ini $TARGET/playbooks/tools/gofile.yml -e \"HOSTS=servers\""
 echo ""
 echo "  # Deploy with custom instances"
-echo "  cd $TARGET && ansible-playbook playbooks/tools/gofile.yml -e \"HOSTS=servers\" -e @extra_vars.yml"
+echo "  ansible-playbook -i hosts.ini $TARGET/playbooks/tools/gofile.yml -e \"HOSTS=servers\" -e @extra_vars.yml"
