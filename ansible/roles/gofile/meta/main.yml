@@ -1,0 +1,23 @@
+galaxy_info:
+  role_name: gofile
+  author: mars-base
+  description: Deploy gofile (HTTP file server) with supervisor
+  license: Apache-2.0
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - file-server
+    - http
+    - file-sharing
+    - upload
+
+dependencies: []

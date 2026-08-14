@@ -1,0 +1,8 @@
+# Install gofile roles from GitHub
+# Usage: ansible-galaxy install -r requirements.yml
+
+roles:
+  - src: https://github.com/mars-base/gofile.git
+    name: gofile
+    version: main
+    scm: git

@@ -1,0 +1,10 @@
+---
+- name: "Deploy gofile HTTP file server"
+  gather_facts: true
+  hosts: "{{ HOSTS }}"
+  become: true
+  become_user: root
+  become_method: sudo
+
+  roles:
+    - role: gofile
