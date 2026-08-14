@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            output: gofile-linux
+          - os: windows
+            arch: amd64
+            output: gofile.exe
+          - os: darwin
+            arch: amd64
+            output: gofile-darwin-amd64
+          - os: darwin
+            arch: arm64
+            output: gofile-darwin-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build binary
+        run: |
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build \
+            -ldflags "-s -w -X 'main.gVersion=${{ github.ref_name }}'" \
+            -o ${{ matrix.output }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create release archives
+        run: |
+          for dir in gofile-*; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              for file in *; do
+                if [ -f "$file" ]; then
+                  if [[ "$file" == *.exe ]]; then
+                    zip "${file%.exe}.zip" "$file"
+                  else
+                    tar -czf "${file}.tar.gz" "$file"
+                  fi
+                  rm "$file"
+                fi
+              done
+              cd ..
+            fi
+          done
+          mv */* .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.tar.gz
+            *.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
